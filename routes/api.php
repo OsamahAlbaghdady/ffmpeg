@@ -46,15 +46,15 @@ Route::post(
         $ffmpeg = FFMpeg::create([
             'ffmpeg.binaries'  => '/var/www/fmfmfmfmf/ffmpeg',
             'ffprobe.binaries' => '/var/www/fmfmfmfmf/ffprobe',
-            'ffmpeg.nvenc'     => true, // Enable NVIDIA GPU acceleration
-            'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
+            // 'ffmpeg.nvenc'     => true, // Enable NVIDIA GPU acceleration
+            // 'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
 
         ]);
         $ffprobe = FFProbe::create([
             'ffmpeg.binaries'  => '/var/www/fmfmfmfmf/ffmpeg',
             'ffprobe.binaries' => '/var/www/fmfmfmfmf/ffprobe',
-            'ffmpeg.nvenc'     => false, // Enable NVIDIA GPU acceleration
-            'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
+            // 'ffmpeg.nvenc'     => false, // Enable NVIDIA GPU acceleration
+            // 'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
 
         ]);
         $video_extensions = ['mp4', 'mpeg', 'mpeg4', 'mov', 'webm', 'avi'];
@@ -66,7 +66,7 @@ Route::post(
 
 		    $thub =  'thubth'.Carbon::now().'j.jpg';
 		    $video = $ffmpeg->open($file);
-		    
+
                 $video->frame(TimeCode::fromSeconds(2))->save('Attachments/thub/' . $thub);
 
                 $destinationPath = public_path('Attachments/thub');
@@ -81,7 +81,9 @@ Route::post(
 
                 $bitRate = $ffprobe->streams($file)->videos()->first()->get('bit_rate');
 
-                $format = new X264();
+                $format = new X264('libfaac', 'h264_cuvid');
+                $format->setInitialParameters(['-vsync', 0, '-hwaccel', 'cuvid']);
+
                 $format->setAdditionalParameters([
                     '-vf',
                     'zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p',
