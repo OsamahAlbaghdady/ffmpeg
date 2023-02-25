@@ -44,69 +44,61 @@ Route::post(
 
 
         $ffmpeg = FFMpeg::create([
-            'ffmpeg.binaries'  => '/var/www/fmfmfmfmf/ffmpeg',
-            'ffprobe.binaries' => '/var/www/fmfmfmfmf/ffprobe',
+            'ffmpeg.binaries'  => '/usr/bin/ffmpeg',
+            'ffprobe.binaries' => '/usr/bin/ffprobe',
             // 'ffmpeg.nvenc'     => true, // Enable NVIDIA GPU acceleration
             // 'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
 
         ]);
         $ffprobe = FFProbe::create([
-            'ffmpeg.binaries'  => '/var/www/fmfmfmfmf/ffmpeg',
-            'ffprobe.binaries' => '/var/www/fmfmfmfmf/ffprobe',
+            'ffmpeg.binaries'  => '/usr/bin/ffmpeg',
+            'ffprobe.binaries' => '/usr/bin/ffprobe',
             // 'ffmpeg.nvenc'     => false, // Enable NVIDIA GPU acceleration
             // 'ffmpeg.nvenc_device' => '/dev/nvidia0' // Specify the NVIDIA GPU device
 
         ]);
         $video_extensions = ['mp4', 'mpeg', 'mpeg4', 'mov', 'webm', 'avi'];
 
-
         if ($request->files) {
 
             foreach ($request->file('files') as $file) {
 
-		    $thub =  'thubth'.Carbon::now().'j.jpg';
-		    $video = $ffmpeg->open($file);
+                $thub =  'thubt' . Carbon::now()->timestamp . 'hj.jpg';
+                $video = $ffmpeg->open($file);
+                $video1 = $ffmpeg->open($file->getRealPath());
+                $ff =  $video1->getPathfile();
+
 
                 $video->frame(TimeCode::fromSeconds(2))->save('Attachments/thub/' . $thub);
 
                 $destinationPath = public_path('Attachments/thub');
+
                 $img = Image::make(public_path('Attachments/thub/') . $thub);
+
                 $height = Image::make($img)->height();
                 $width = Image::make($img)->width();
 
 
                 $img->fit(360)->save($destinationPath . '/' . $thub);
 
-                $name = 'ptest'.Carbon::now().'v.mp4';
+                $name = 'ptest' . Carbon::now()->timestamp . 'v.mp4';
 
                 $bitRate = $ffprobe->streams($file)->videos()->first()->get('bit_rate');
 
-                $format = new X264('libfaac', 'h264_cuvid');
-                $format->setInitialParameters(['-vsync', 0, '-hwaccel', 'cuvid']);
 
-                $format->setAdditionalParameters([
-                    '-vf',
-                    'zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p',
-                    '-c:v',
-                    'h264_nvenc', // Use NVIDIA hardware-accelerated H.264 encoder
-                    '-gpu',
-                    '0', // Specify the NVIDIA GPU device
-                    ##'-preset',
-                    ##'slow', // Use the slow preset for better quality
-                    ##'-rc',
-                    ##'vbr_hq', // Use variable bitrate with high quality
-                    ##'-cq',
-                    ##'23', // Set the quality level
-                    ##'-profile:v',
-                    ##'high', // Use the high profile for compatibility
-                    ##'-level',
-                    ##'4.1' // Use level 4.1 for compatibility
-                ]);
+                // $format = new X264();
+
+
+                // $format->setAdditionalParameters([
+                //     '-vf',
+                //     'zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p',
+                // ]);
+
+
 
                 if ($bitRate > 500000) {
-                    $format->setKiloBitrate(500);
-                } else {
-                    $format->setKiloBitrate($bitRate / 1000);
+                    $bitRate = '500000';
+                    // $format->setKiloBitrate(500);
                 }
 
                 if ($width > $height) {
@@ -116,6 +108,8 @@ Route::post(
                     } else {
                         $newWidth = 854;
                         $newHeight = ($height / $width) * 854;
+                        if((int)$newHeight != 480)
+                        $newHeight = 480;
                     }
                 } else {
                     if ($height < 854) {
@@ -126,15 +120,27 @@ Route::post(
                         $newHeight = 854;
                     }
                 }
-                $video->filters()
-                    ->resize(new \FFMpeg\Coordinate\Dimension((int)$newWidth, (int)$newHeight))
-                    ->synchronize();
+                // $video->filters()
+                //     ->resize(new \FFMpeg\Coordinate\Dimension((int)$newWidth, (int)$newHeight))
+                //     ->synchronize();
 
 
-                $video->save($format, base_path() . '/public/Attachments/' . $name);
+
+                $savedPath =  base_path() . '/public/Attachments/' . $name;
+
+
+                $resolution = (int)$newWidth . ":" . (int)$newHeight; // Set the desired output resolution here
+
+                // $options = "-vf scale=$resolution -c:v h264_nvenc -cq 23 -b:v 500k -c:a copy";
+                $command = "ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf scale=$resolution -b:v 500k -c:a copy $savedPath";
+
+                echo exec($command);
+
+                // $video->save($format, base_path() . '/public/Attachments/' . $name);
                 return response()->json(['url' => url('/Attachments/' . $name)]);
             }
         }
+
     }
 );
 
