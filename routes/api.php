@@ -128,10 +128,11 @@ Route::post(
                 $savedPath =  base_path() . '/public/Attachments/' . $name;
 
 
-                $resolution = (int)$newWidth . ":" . (int)$newHeight; // Set the desired output resolution here
+                $resolution = (int)$newWidth . "x" . (int)$newHeight; // Set the desired output resolution here
 
 		// $options = "-vf scale=$resolution -c:v h264_nvenc -cq 23 -b:v 500k -c:a copy";
-              $command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf \"scale=$resolution, tonemap=tonemap=hable:desat=0\" -b:v $bitRate -c:a copy $savedPath";
+              //$command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf \"scale=$resolution, tonemap=tonemap=hable:desat=0\" -b:v $bitRate -c:a copy $savedPath";
+              $command = "ffmpeg -vsync 0 -hwaccel cuda -init_hw_device opencl=ocl -filter_hw_device ocl -extra_hw_frames 3 -threads 16 -c:v hevc_cuvid -resize 1920x1080 -i $ff -vf format=p010,hwupload,tonemap_opencl=tonemap=mobius:param=0.01:desat=0:r=tv:p=bt709:t=bt709:m=bt709:format=nv12,hwdownload,format=nv12 -c:a copy -c:s copy -c:v libx264 -max_muxing_queue_size 9999 $savedPath";
 
                 echo exec($command);
 
