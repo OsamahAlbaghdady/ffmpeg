@@ -131,8 +131,7 @@ Route::post(
                 $resolution = (int)$newWidth . ":" . (int)$newHeight; // Set the desired output resolution here
 
 		// $options = "-vf scale=$resolution -c:v h264_nvenc -cq 23 -b:v 500k -c:a copy";
-              //$command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf \"scale=$resolution, tonemap=tonemap=hable:desat=0\" -b:v $bitRate -c:a copy $savedPath";
-              $command = "ffmpeg -y -vsync 0 -hwaccel cuda -hwaccel_output_format cuda -i $ff -c:a copy -c:v h264_nvenc -preset p6 -tune hq -b:v $bitRate -bufsize 5M  -maxrate 10M -qmin 0 -g 250 -bf 3 -b_ref_mode middle -temporal-aq 1 -rc-lookahead 20 -i_qfactor 0.75 -b_qfactor 1.1 $savedPath";
+                $command = "/var/www/html/ffmpeg/ffmpeg -i $ff -color_trc linear -color_range pc -color_primaries bt709 -colorspace rgb -i -c:v h264_nvenc -pix_fmt yuv420p -vf scale=$resolution -b:v $bitRate -c:a copy $savedPath";
 
                 echo exec($command);
 
