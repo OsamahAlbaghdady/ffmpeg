@@ -41,7 +41,7 @@ Route::controller(AuthController::class)->group(function () {
 Route::post(
     'fmpeg',
     function (Request $request) {
-	  
+
 
         $ffmpeg = FFMpeg::create([
             'ffmpeg.binaries'  => exec('which ffmpeg'),
@@ -58,16 +58,16 @@ Route::post(
 
         ]);
         $video_extensions = ['mp4', 'mpeg', 'mpeg4', 'mov', 'webm', 'avi'];
-	
+
         if ($request->files) {
 
             foreach ($request->file('files') as $file) {
- 
+
                 $thub =  'thubt' . Carbon::now()->timestamp . 'hj.jpg';
                 $video = $ffmpeg->open($file);
                 $video1 = $ffmpeg->open($file->getRealPath());
                 $ff =  $video1->getPathfile();
-					
+
                 $video->frame(TimeCode::fromSeconds(2))->save('Attachments/thub/' . $thub);
 
                 $destinationPath = public_path('Attachments/thub');
@@ -83,7 +83,7 @@ Route::post(
                 $name = 'ptest' . Carbon::now()->timestamp . 'v.mp4';
 
                 $bitRate = $ffprobe->streams($file)->videos()->first()->get('bit_rate');
-		
+
 
                 // $format = new X264();
 
@@ -131,8 +131,7 @@ Route::post(
                 $resolution = (int)$newWidth . ":" . (int)$newHeight; // Set the desired output resolution here
 
 		// $options = "-vf scale=$resolution -c:v h264_nvenc -cq 23 -b:v 500k -c:a copy";
-		$command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf scale=in_range=full:out_range=tv:in_color_matrix=bt2020:out_color_matrix=bt709:tonemap=tonemap=hable:desat=0,format=yuv420p -b:v $bitRate -c:a copy $savedPath";
-                //$command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf scale=$resolution -b:v $bitRate -c:a copy $savedPath";
+              $command = "/var/www/html/ffmpeg/ffmpeg -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf \"scale=$resolution, tonemap=tonemap=hable:desat=0\" -b:v $bitRate -c:a copy $savedPath";
 
                 echo exec($command);
 
