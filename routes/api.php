@@ -131,9 +131,7 @@ Route::post(
                 $resolution = (int)$newWidth . ":" . (int)$newHeight; // Set the desired output resolution here
 
 		// $options = "-vf scale=$resolution -c:v h264_nvenc -cq 23 -b:v 500k -c:a copy";
-                $command = "/var/www/html/ffmpeg/ffmpeg -color_trc linear -color_range pc -color_primaries bt709 -colorspace rgb -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf scale=$resolution -b:v $bitRate -c:a copy $savedPath";
-
-
+                $command = "/var/www/html/ffmpeg/ffmpeg -color_trc smpte2084 -color_primaries bt2020 -i $ff -c:v h264_nvenc -pix_fmt yuv420p -vf scale=$resolution -b:v $bitRate -c:a copy $savedPath";
 
                 echo exec($command);
 
